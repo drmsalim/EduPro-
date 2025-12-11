@@ -1,0 +1,26 @@
+{
+  "name": "@swc/db",
+  "version": "0.1.0",
+  "description": "Database package for SWC Platform",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rimraf dist",
+    "lint": "eslint \"src/**/*.ts\"",
+    "test": "echo \"No tests specified\"",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.1.1"
+  },
+  "devDependencies": {
+    "prisma": "^5.1.1",
+    "rimraf": "^5.0.1"
+  },
+  "files": [
+    "dist",
+    "prisma"
+  ]
+}

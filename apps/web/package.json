@@ -1,0 +1,30 @@
+{
+  "name": "@swc/web",
+  "version": "0.1.0",
+  "description": "Web application for SWC Platform",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit",
+    "clean": "rimraf .next out dist"
+  },
+  "dependencies": {
+    "next": "^14.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "@swc/db": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.5.0",
+    "@types/react": "^18.2.20",
+    "@types/react-dom": "^18.2.7",
+    "@typescript-eslint/eslint-plugin": "^6.4.0",
+    "@typescript-eslint/parser": "^6.4.0",
+    "eslint": "^8.47.0",
+    "eslint-config-next": "^14.0.0",
+    "rimraf": "^5.0.1",
+    "typescript": "^5.1.6"
+  }
+}
