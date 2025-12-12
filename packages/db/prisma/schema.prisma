@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,4 +5,264 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model Site {
+  id             String          @id @default(cuid())
+  name           String          @unique
+  description    String?
+  location       String
+  latitude       Float
+  longitude      Float
+  slopeClass     SlopeClass
+  soilTexture    SoilTexture
+  landUse        LandUse
+  drainage       Drainage
+  rainfallBand   RainfallBand
+  gullyState     GullySeverity
+  technicalSpecs Json?
+  safetyNotes    Json?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  designs        Design[]
+  metrics        Metric[]
+  siteTechniques SiteTechnique[]
+}
+
+model Technique {
+  id             String          @id @default(cuid())
+  code           String          @unique
+  name           String
+  description    String?
+  category       String
+  technicalSpecs Json?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  boqItems       BOQItem[]
+  designLayers   DesignLayer[]
+  siteTechniques SiteTechnique[]
+}
+
+model SiteTechnique {
+  id                  String              @id @default(cuid())
+  siteId              String
+  techniqueId         String
+  status              SiteTechniqueStatus
+  plannedDate         DateTime?
+  implementationDate  DateTime?
+  maintenanceSchedule Json?
+  workflowSteps       Json?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  site                Site                @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  technique           Technique           @relation(fields: [techniqueId], references: [id], onDelete: Cascade)
+
+  @@unique([siteId, techniqueId])
+}
+
+model DesignTemplate {
+  id              String        @id @default(cuid())
+  code            String        @unique
+  name            String
+  description     String?
+  parameterSchema Json
+  outputs         Json?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  designs         DesignLayer[]
+}
+
+model Design {
+  id             String        @id @default(cuid())
+  siteId         String
+  code           String
+  name           String
+  description    String?
+  status         DesignStatus  @default(DRAFT)
+  technicalSpecs Json?
+  safetyNotes    Json?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  boq            BOQ?
+  site           Site          @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  designLayers   DesignLayer[]
+
+  @@unique([siteId, code])
+}
+
+model DesignLayer {
+  id             String          @id @default(cuid())
+  designId       String
+  templateId     String?
+  techniqueId    String?
+  layerNumber    Int
+  name           String
+  description    String?
+  parameters     Json?
+  technicalSpecs Json?
+  safetyNotes    Json?
+  workflowSteps  Json?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  boqItems       BOQItem[]
+  design         Design          @relation(fields: [designId], references: [id], onDelete: Cascade)
+  technique      Technique?      @relation(fields: [techniqueId], references: [id])
+  template       DesignTemplate? @relation(fields: [templateId], references: [id])
+}
+
+model MaintenanceTemplate {
+  id             String   @id @default(cuid())
+  code           String   @unique
+  name           String
+  description    String?
+  workflowSteps  Json?
+  technicalSpecs Json?
+  safetyNotes    Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Material {
+  id          String    @id @default(cuid())
+  code        String    @unique
+  name        String
+  description String?
+  unit        String
+  unitCost    Float
+  suppliers   Json?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  boqItems    BOQItem[]
+}
+
+model BOQ {
+  id          String       @id @default(cuid())
+  designId    String       @unique
+  totalCost   Float        @default(0)
+  currency    String       @default("USD")
+  notes       String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  design      Design       @relation(fields: [designId], references: [id], onDelete: Cascade)
+  items       BOQItem[]
+  costRecords CostRecord[]
+}
+
+model BOQItem {
+  id            String      @id @default(cuid())
+  boqId         String
+  designLayerId String
+  materialId    String
+  techniqueId   String?
+  description   String
+  quantity      Float
+  unitCost      Float
+  totalCost     Float
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  boq           BOQ         @relation(fields: [boqId], references: [id], onDelete: Cascade)
+  designLayer   DesignLayer @relation(fields: [designLayerId], references: [id], onDelete: Cascade)
+  material      Material    @relation(fields: [materialId], references: [id])
+  technique     Technique?  @relation(fields: [techniqueId], references: [id])
+}
+
+model Metric {
+  id             String   @id @default(cuid())
+  siteId         String
+  name           String
+  description    String?
+  unit           String
+  value          Float
+  measuredDate   DateTime
+  technicalSpecs Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  site           Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+}
+
+model CostRecord {
+  id          String   @id @default(cuid())
+  boqId       String?
+  amount      Float
+  description String?
+  date        DateTime
+  category    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  boq         BOQ?     @relation(fields: [boqId], references: [id])
+}
+
+enum SlopeClass {
+  FLAT
+  GENTLE
+  MODERATE
+  STEEP
+  VERY_STEEP
+}
+
+enum SoilTexture {
+  SANDY
+  LOAMY_SAND
+  SANDY_LOAM
+  LOAM
+  SILT_LOAM
+  SILT
+  CLAY_LOAM
+  SILTY_CLAY_LOAM
+  SANDY_CLAY_LOAM
+  CLAY
+  SILTY_CLAY
+  SANDY_CLAY
+}
+
+enum LandUse {
+  ARABLE
+  PASTURE
+  WOODLAND
+  WETLAND
+  URBAN
+  BARE_SOIL
+  SHRUBLAND
+  OTHER
+}
+
+enum Drainage {
+  VERY_POOR
+  POOR
+  MODERATE
+  WELL
+  VERY_WELL
+}
+
+enum RainfallBand {
+  ARID
+  SEMI_ARID
+  SUB_HUMID
+  HUMID
+  VERY_HUMID
+}
+
+enum GullySeverity {
+  NONE
+  MINOR
+  MODERATE
+  SEVERE
+  VERY_SEVERE
+}
+
+enum DesignStatus {
+  DRAFT
+  REVIEW
+  APPROVED
+  IMPLEMENTED
+  COMPLETED
+  ARCHIVED
+}
+
+enum SiteTechniqueStatus {
+  PLANNED
+  IMPLEMENTED
+  ACTIVE
+  MAINTENANCE
+  ABANDONED
 }
